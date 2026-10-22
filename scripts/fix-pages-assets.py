@@ -18,7 +18,7 @@ for path in dist.rglob("*"):
     updated = value
     # User-authored asset refs bypass Vite's HTML/CSS rewriting because they are
     # dynamic runtime strings inside React components.
-    for origin in ("/images/", "/fonts/", "/favicon.svg", "/shoe-fallback.svg"):
+    for origin in ("/assets/", "/images/", "/fonts/", "/favicon.svg", "/shoe-fallback.svg"):
         updated = updated.replace(origin, prefix + origin.lstrip("/"))
     # Avoid duplicate prefixing when processing assets already expanded by Vite.
     updated = updated.replace(prefix + prefix.lstrip("/"), prefix)
