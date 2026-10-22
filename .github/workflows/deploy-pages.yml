@@ -1,0 +1,66 @@
+name: Deploy FindSkill showcase and four storefronts
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Prepare root showcase
+        run: |
+          mkdir -p _site
+          cp index.html prompts.js _site/
+          touch _site/.nojekyll
+
+      - name: Build all four Vite storefronts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for project in A-Baseline B-Auto-Discovery C-With-Skills D-Agent-Instructions; do
+            echo "::group::Building $project"
+            cd "$GITHUB_WORKSPACE/$project"
+            npm ci
+            npm run build -- --base "/FindSkill/$project/"
+            mkdir -p "$GITHUB_WORKSPACE/_site/$project"
+            cp -R dist/. "$GITHUB_WORKSPACE/_site/$project/"
+            echo "::endgroup::"
+          done
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
