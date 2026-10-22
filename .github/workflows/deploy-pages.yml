@@ -41,6 +41,11 @@ jobs:
             cd "$GITHUB_WORKSPACE/$project"
             npm ci
             npm run build -- --base "/FindSkill/$project/"
+            python3 "$GITHUB_WORKSPACE/scripts/fix-pages-assets.py" "$project" dist
+            echo "Verifying compiled entry paths:"
+            grep -Eo "/FindSkill/$project/assets/[^\" ]+" dist/index.html | head -5
+            test -f dist/index.html
+            test -n "$(find dist/assets -maxdepth 1 -name '*.js' -print -quit)"
             mkdir -p "$GITHUB_WORKSPACE/_site/$project"
             cp -R dist/. "$GITHUB_WORKSPACE/_site/$project/"
             echo "::endgroup::"
